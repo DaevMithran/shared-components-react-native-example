@@ -29,6 +29,7 @@ import {
 
 import { ariesAskar } from '@hyperledger/aries-askar-react-native'
 import { anoncreds } from '@hyperledger/anoncreds-react-native'
+import { CheqdAnonCredsRegistry, CheqdDidRegistrar, CheqdDidResolver } from '@aries-framework/cheqd'
 
 export const agent = new Agent({
   config: {
@@ -88,17 +89,17 @@ export const agent = new Agent({
     dids: new DidsModule({
       // Support creation of did:key dids
       // FIXME: add cheqd did resolver
-      registrars: [new KeyDidRegistrar()],
+      registrars: [new KeyDidRegistrar(), new CheqdDidRegistrar()],
       // Support resolving of did:indy, did:sov, did:key and did:web dids
       // FIXME: add cheqd did registrar
-      resolvers: [new KeyDidResolver(), new WebDidResolver()],
+      resolvers: [new KeyDidResolver(), new WebDidResolver(), new CheqdDidResolver()],
     }),
 
     // AnonCreds
     anoncreds: new AnonCredsModule({
       // Support indy anoncreds method
       // FIXME: add cheqd registry
-      registries: [],
+      registries: [new CheqdAnonCredsRegistry()],
     }),
     // Use anoncreds-rs as anoncreds backend
     _anoncreds: new AnonCredsRsModule({

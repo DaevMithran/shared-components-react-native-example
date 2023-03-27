@@ -1,0 +1,12 @@
+{
+  "name": "custom-crypto-polyfill",
+  "version": "0.0.1",
+  "main": "index.js",
+  "sideEffects": false,
+  "dependencies": {
+    "browserify-cipher": "1.0.1",
+    "create-hash": "1.2.0",
+    "create-hmac": "1.1.7",
+    "readable-stream2-react-native": "2.3.9"
+  }
+}

@@ -18,8 +18,12 @@
     "@aries-framework/react-native": "0.4.0-alpha.85",
     "@hyperledger/anoncreds-react-native": "0.1.0-dev.11",
     "@hyperledger/aries-askar-react-native": "0.1.0-dev.6",
+    "buffer": "^6.0.3",
+    "eventemitter3": "^5.0.0",
+    "process": "0.11.10",
     "react": "18.1.0",
     "react-native": "0.70.6",
+    "react-native-crypto-polyfill": "file:./crypto-polyfill",
     "react-native-fs": "^2.20.0",
     "react-native-get-random-values": "^1.8.0"
   },
@@ -39,6 +43,7 @@
   },
   "resolutions": {
     "@unimodules/react-native-adapter": "./noop",
-    "@unimodules/core": "./noop"
+    "@unimodules/core": "./noop",
+    "file-type": "npm:react-native-file-type@1.0.0"
   }
 }

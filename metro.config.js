@@ -7,7 +7,7 @@
 const { getDefaultConfig } = require('metro-config')
 
 module.exports = (async ()=>{
-    const root = __dirname
+const root = __dirname
 
 const defaultConfig = await getDefaultConfig(root)
     return {
@@ -24,7 +24,7 @@ const defaultConfig = await getDefaultConfig(root)
     sourceExts: ['js', 'json', 'ts', 'tsx', 'cjs'],
     extraNodeModules: {
         ...defaultConfig.resolver.extraNodeModules,
-        crypto: __dirname + '/node_modules/react-native-crypto-polyfill',
-    }
+        "buffer": __dirname + '/node_modules/buffer'
+    },
   },}
 })

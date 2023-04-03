@@ -1,9 +1,9 @@
 import { ariesAskar } from '@hyperledger/aries-askar-react-native'
 import { anoncreds } from '@hyperledger/anoncreds-react-native'
-import { AnonCredsSchema } from '@aries-framework/anoncreds'
+import { AnonCredsCredentialDefinition, AnonCredsSchema } from '@aries-framework/anoncreds'
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView, StyleSheet, Text, useColorScheme, View } from 'react-native'
-
+import { Button, SafeAreaView, ScrollView, StyleSheet, Text, useColorScheme, View } from 'react-native'
+import fullAnoncredsRsFlowTest from './anoncredsTest'
 import { Colors } from 'react-native/Libraries/NewAppScreen'
 import { agent } from './agent'
 import { ConnectionRecord, CredentialExchangeRecord } from '@aries-framework/core'
@@ -14,8 +14,11 @@ const AgentView = ({}) => {
   const [versions, setVersions] = useState('')
   const [connections, setConnections] = useState<ConnectionRecord[]>([])
   const [credentials, setCredentials] = useState<CredentialExchangeRecord[]>([])
-  const [schema, setSchema] = useState<AnonCredsSchema>()
+  const [schema, setSchema] = useState<string>()
+  const [credDef, setCredDef] = useState<string>()
   const [linkSecrets, setLinkSecrets] = useState<string[]>()
+  const [dids, setDids] = useState<string[]>([])
+  const [resolvedResult, setResolvedResult] = useState<any>()
 
   useEffect(() => {
     console.log({
@@ -46,6 +49,9 @@ const AgentView = ({}) => {
         setConnections(connections)
         const credentials = await agent.credentials.getAll()
         setCredentials(credentials)
+        const dids = (await agent.dids.getCreatedDids({method: 'cheqd'})).map((didRecord)=>didRecord.did)
+
+        setDids(dids)
       }, 2000)
 
       // get schema
@@ -67,6 +73,64 @@ const AgentView = ({}) => {
     }
   }, [isInitializing])
 
+  async function createDid() {
+    const didResult = await agent.dids.create({
+        method: 'cheqd',
+        secret: {
+          verificationMethod: {
+            id: 'key-11',
+            type: 'JsonWebKey2020',
+          },
+        },
+        options: {
+          network: 'testnet',
+          methodSpecificIdAlgo: 'base58btc',
+        },
+      })
+      if(didResult.didState.did) {
+        setDids([...dids, didResult.didState.did])
+      }
+  }
+
+  async function createSchemaAndCredDef() {
+    const cheqdDid = dids[dids.length - 1]
+    const dynamicVersion = `1.${Math.random() * 100}`
+    if(cheqdDid) {
+        const schemaResult = await agent.modules.anoncreds.registerSchema({
+            schema: {
+                attrNames: ['name', 'age'],
+                issuerId: cheqdDid,
+                name: 'Person',
+                version: dynamicVersion,
+            },
+            options: {},
+        })
+        setSchema(schemaResult.schemaState.schemaId || '')
+        const credDefResult = await agent.modules.anoncreds.registerCredentialDefinition({
+            credentialDefinition: {
+                issuerId: cheqdDid,
+                tag: 'DrivingLicense',
+                schemaId: schemaResult.schemaState.schemaId!,
+            },
+            options: {}
+        })
+        console.log(credDefResult)
+        setCredDef(credDefResult.credentialDefinitionState.credentialDefinitionId || '')
+      }
+  }
+
+  async function resolveDid(id: string) {
+    setResolvedResult(await agent.dids.resolve(id))
+  }
+
+  async function resolveSchema(id: string){
+    setResolvedResult(await agent.modules.anoncreds.getSchema(id))
+  }
+
+  async function resolveCredDef(id: string){
+    setResolvedResult(await agent.modules.anoncreds.getCredentialDefinition(id))
+  }
+
   return (
     <View style={styles.sectionContainer}>
       <Text
@@ -77,7 +141,7 @@ const AgentView = ({}) => {
           },
         ]}
       >
-        AFJ Shared components RN sample tests
+        AFJ x CHEQD
       </Text>
       <Text
         style={[
@@ -91,7 +155,18 @@ const AgentView = ({}) => {
       </Text>
       <Text />
       <Text />
+      <Button
+        onPress={createDid}
+        title="Create DID"
+        color="#841584"
+      />
       <Text />
+      <Text />
+      <Button
+        onPress={createSchemaAndCredDef}
+        title="Create Schema and CredDef"
+        color="#841584"
+      />
       {connections.length > 0 && <Text style={{ color: 'green' }}>Connections (Askar Check)</Text>}
       {connections.map((c) => (
         <Text style={{ marginTop: 3 }} key={c.id}>
@@ -107,9 +182,15 @@ const AgentView = ({}) => {
       ))}
       <Text />
       {schema && (
-        <Text>
+        <Text onPress={()=>resolveSchema(schema)}>
           <Text style={{ color: 'green' }}>Schema (Indy VDR Check){'\n'}</Text>
-          {JSON.stringify(schema, null, 2)}
+          {schema}
+        </Text>
+      )}
+      {credDef && (
+        <Text onPress={()=>resolveCredDef(credDef)}>
+          <Text style={{ color: 'green' }}>Schema (Indy VDR Check){'\n'}</Text>
+          {credDef}
         </Text>
       )}
       {linkSecrets && (
@@ -118,6 +199,19 @@ const AgentView = ({}) => {
           {JSON.stringify(linkSecrets, null, 2)}
         </Text>
       )}
+      {dids && (
+        dids.map((DID)=><Text onPress={()=>resolveDid(DID)} key={DID}>
+          <Text style={{ color: 'green' }}>DIDs (AnonCreds Cheqd){'\n'}</Text>
+          {DID}
+        </Text>)
+      )}
+      { resolvedResult && (
+        <Text onLongPress={()=>setResolvedResult(null)}>
+        <Text style={{ color: 'green' }}>DIDs (AnonCreds Cheqd){'\n'}</Text>
+        {JSON.stringify(resolvedResult, null, 2)}
+        </Text>
+      )
+      }
     </View>
   )
 }
@@ -131,7 +225,9 @@ const App = () => {
 
   return (
     <SafeAreaView style={backgroundStyle}>
+    <ScrollView>
       <AgentView />
+      </ScrollView>
     </SafeAreaView>
   )
 }
@@ -144,6 +240,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '600',
+    textAlign: 'center',
   },
   sectionDescription: {
     marginTop: 8,

@@ -29,7 +29,7 @@ import {
 
 import { ariesAskar } from '@hyperledger/aries-askar-react-native'
 import { anoncreds } from '@hyperledger/anoncreds-react-native'
-import { CheqdAnonCredsRegistry, CheqdDidRegistrar, CheqdDidResolver } from '@aries-framework/cheqd'
+import { CheqdAnonCredsRegistry, CheqdDidRegistrar, CheqdDidResolver, CheqdModule, CheqdModuleConfig } from '@aries-framework/cheqd'
 
 export const agent = new Agent({
   config: {
@@ -107,6 +107,14 @@ export const agent = new Agent({
     }),
 
     // FIXME: add cheqd module
+    cheqd: new CheqdModule(new CheqdModuleConfig({
+        networks: [
+          {
+            network: 'testnet',
+            cosmosPayerSeed: 'sketch mountain erode window enact net enrich smoke claim kangaroo another visual write meat latin bacon pulp similar forum guilt father state erase bright',
+          },
+        ],
+      })),
   },
   dependencies: agentDependencies,
 })
